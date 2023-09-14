@@ -7,7 +7,6 @@ from processors import Processor
 from satromo_publish import Publisher
 
 
-
 @click.group()
 @click.option('--debug/--no-debug', default=False)
 @click.option('--config', 'config_file', default=None)
@@ -40,3 +39,7 @@ def publish():
 
 if __name__ == '__main__':
     cli()
+
+
+
+

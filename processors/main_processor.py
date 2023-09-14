@@ -1,13 +1,15 @@
+import os
 import datetime
-from misc.run_utilities import determine_run_type, RunType
+import json
 from simple_settings import settings
 from loguru import logger
-import json
+import ee
 from pydrive.auth import GoogleAuth
 from oauth2client.service_account import ServiceAccountCredentials
+from misc.run_utilities import determine_run_type, RunType
 from .ndvimax_processor import NdviMaxProcessor
 from .l2a_processor import L2AProcessor
-import ee
+
 
 class Processor:
     def __init__(self):
@@ -43,10 +45,9 @@ class Processor:
         """
         # Set scopes for Google Drive
         scopes = ["https://www.googleapis.com/auth/drive"]
-
-        if settings.run_type == RunType.DEV:
+        gauth = None
+        if settings.run_type == RunType.DEV and settings.gdrive_secrets != 'personal':
             # Initialize GEE and authenticate using the service account key file
-
             # Read the service account key file
             with open(settings.gdrive_secrets, "r") as f:
                 data = json.load(f)
@@ -75,14 +76,15 @@ class Processor:
             gauth.credentials = ServiceAccountCredentials.from_json_keyfile_name(
                 gauth.service_account_file, scopes=scopes
             )
-        else:
-            raise BrokenPipeError('Run Type Unkwown')
 
         # Initialize Google Earth Engine
-        credentials = ee.ServiceAccountCredentials(
-            gauth.service_account_email, gauth.service_account_file
-        )
-        ee.Initialize(credentials)
+        if gauth is not None:
+            credentials = ee.ServiceAccountCredentials(
+                gauth.service_account_email, gauth.service_account_file
+            )
+            ee.Initialize(credentials)
+        else:
+            ee.Initialize()
 
         # Test if GEE initialization is successful
         image = ee.Image("NASA/NASADEM_HGT/001")

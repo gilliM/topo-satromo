@@ -20,7 +20,11 @@ def set_config():
     settings.configure(processing_dir=os.path.join(main_directory, data['PROCESSING_DIR']))
     settings.configure(last_product_updates=os.path.join(main_directory, *data['LAST_PRODUCT_UPDATES']))
 
-    settings.configure(gdrive_secrets=os.path.join(main_directory, 'secrets', settings.config['GDRIVE_SECRETS']))
+    if settings.config['GDRIVE_SECRETS'] == 'personal':
+        settings.configure(gdrive_secrets="personal")
+    else:
+        settings.configure(gdrive_secrets=os.path.join(main_directory, 'secrets', settings.config['GDRIVE_SECRETS']))
+
     # Get the operating system name
     os_name = platform.system()
     settings.configure(os_name=os_name)
@@ -39,7 +43,7 @@ def determine_run_type():
     Otherwise, sets the run type to 1 (PROD) and prints a corresponding message.
     """
 
-    if os.path.exists(settings.gdrive_secrets):
+    if os.path.exists(settings.gdrive_secrets) or settings.gdrive_secrets == 'personal':
         settings.configure(run_type=RunType.DEV)
     else:
         settings.configure(run_type=RunType.INT)
