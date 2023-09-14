@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from pydrive.auth import GoogleAuth
 import csv
 from oauth2client.service_account import ServiceAccountCredentials
@@ -658,7 +657,7 @@ def process_S2_LEVEL_2A():
         return 0
 
 
-if __name__ == "__main__":
+def process():
     # Test if we are on Local DEV Run or if we are on PROD
     determine_run_type()
 
@@ -693,5 +692,9 @@ if __name__ == "__main__":
     # roi = ee.Geometry.Rectangle( [ 7.075402, 46.107098, 7.100894, 46.123639])
     result = process_S2_LEVEL_2A()
     print("Result:", result)
+    print("Processing done!")
 
-print("Processing done!")
+
+if __name__ == "__main__":
+    process()
+

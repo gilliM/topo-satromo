@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 from oauth2client.service_account import ServiceAccountCredentials
@@ -503,7 +502,7 @@ def replace_running_with_complete(input_file, item):
         f.writelines(output_lines)
 
 
-if __name__ == "__main__":
+def publish():
 
     # Test if we are on Local DEV Run or if we are on PROD
     determine_run_type()
@@ -602,3 +601,7 @@ if __name__ == "__main__":
         file.Delete()
         print('GDRIVE TRASH: Deleted file: %s' % file['title'])
     print("PUBLISH Process done.")
+
+
+if __name__ == "__main__":
+    publish()
