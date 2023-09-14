@@ -37,6 +37,7 @@ jobs:
       
     - name: Push tools files to repo
       uses: github-actions-x/commit@v2.9
+      if: ${{ !env.ACT }}
       with:
         push-branch: 'main'
         commit-message: 'Tools files done'
@@ -46,6 +47,7 @@ jobs:
 
     - name: Push processing files to repo
       uses: github-actions-x/commit@v2.9
+      if: ${{ !env.ACT }}
       with:
         push-branch: 'main'
         commit-message: 'Processing files done'
