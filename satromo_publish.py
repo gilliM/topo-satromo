@@ -9,42 +9,9 @@ import configuration as config
 from collections import OrderedDict
 import subprocess
 import glob
-import platform
 
 # Set the CPL_DEBUG environment variable to enable verbose output
 os.environ["CPL_DEBUG"] = "ON"
-
-
-def determine_run_type():
-    """
-    Determines the run type based on the existence of the SECRET on the local machine file. And determine platform
-
-    If the file `config.GDRIVE_SECRETS` exists, sets the run type to 2 (DEV) and prints a corresponding message.
-    Otherwise, sets the run type to 1 (PROD) and prints a corresponding message.
-    """
-    global run_type
-    global GDRIVE_SOURCE
-    global S3_DESTINATION
-    global GDRIVE_MOUNT
-    global os_name
-
-    # Get the operating system name
-    os_name = platform.system()
-
-    # Set SOURCE , DESTINATION and MOUNTPOINTS
-
-    if os.path.exists(config.GDRIVE_SECRETS):
-        run_type = 2
-        print("\nType 2 run PUBLISHER: We are on DEV")
-        GDRIVE_SOURCE = config.GDRIVE_SOURCE_DEV
-        GDRIVE_MOUNT = config.GDRIVE_MOUNT_DEV
-        S3_DESTINATION = config.S3_DESTINATION_DEV
-    else:
-        run_type = 1
-        print("\nType 1 run PUBLISHER: We are on INT")
-        GDRIVE_SOURCE = config.GDRIVE_SOURCE_INT
-        GDRIVE_MOUNT = config.GDRIVE_MOUNT_INT
-        S3_DESTINATION = config.S3_DESTINATION_INT
 
 
 def initialize_gee_and_drive():
@@ -502,106 +469,111 @@ def replace_running_with_complete(input_file, item):
         f.writelines(output_lines)
 
 
-def publish():
+class Publisher:
 
-    # Test if we are on Local DEV Run or if we are on PROD
-    determine_run_type()
+    def __init__(self):
+        pass
 
-    # Authenticate with GEE and GDRIVE
-    initialize_gee_and_drive()
+    def run(self):
+        # Test if we are on Local DEV Run or if we are on PROD
+        determine_run_type()
 
-    # empty temp files on GDrive
-    file_list = drive.ListFile({'q': "trashed=true"}).GetList()
-    for file in file_list:
-        file.Delete()
-        print('GDRIVE TRASH: Deleted file: %s' % file['title'])
+        # Authenticate with GEE and GDRIVE
+        initialize_gee_and_drive()
 
-    # Read the status file
-    with open(config.GEE_RUNNING_TASKS, "r") as f:
-        lines = f.readlines()
+        # empty temp files on GDrive
+        file_list = drive.ListFile({'q': "trashed=true"}).GetList()
+        for file in file_list:
+            file.Delete()
+            print('GDRIVE TRASH: Deleted file: %s' % file['title'])
 
-    # Get the unique filename
-    unique_filenames = set()
+        # Read the status file
+        with open(config.GEE_RUNNING_TASKS, "r") as f:
+            lines = f.readlines()
 
-    for line in lines[1:]:  # Start from the second line
-        _, filename = line.strip().split(',')
-        # Take the part before "quadrant"
-        filename = filename.split('quadrant')[0]
-        unique_filenames.add(filename.strip())
+        # Get the unique filename
+        unique_filenames = set()
 
-    unique_filenames = list(unique_filenames)
+        for line in lines[1:]:  # Start from the second line
+            _, filename = line.strip().split(',')
+            # Take the part before "quadrant"
+            filename = filename.split('quadrant')[0]
+            unique_filenames.add(filename.strip())
 
-    # Check  if each quandrant is complete then process
-    # Iterate over unique filenames
-    for filename in unique_filenames:
+        unique_filenames = list(unique_filenames)
 
-        # Keep track of completion status
-        all_completed = True
-        # You need to change this if we have more than 4 quadrants
-        for quadrant_num in range(1, 5):
-            # Construct the filename with the quadrant
-            full_filename = filename + "quadrant" + str(quadrant_num)
+        # Check  if each quandrant is complete then process
+        # Iterate over unique filenames
+        for filename in unique_filenames:
 
-            # Find the corresponding task ID in the lines list
-            task_id = None
-            for line in lines[1:]:
-                if full_filename in line:
-                    task_id = line.strip().split(",")[0]
-                    break
+            # Keep track of completion status
+            all_completed = True
+            # You need to change this if we have more than 4 quadrants
+            for quadrant_num in range(1, 5):
+                # Construct the filename with the quadrant
+                full_filename = filename + "quadrant" + str(quadrant_num)
 
-            if task_id:
-                # Check task status
-                task_status = ee.data.getTaskStatus(task_id)[0]
+                # Find the corresponding task ID in the lines list
+                task_id = None
+                for line in lines[1:]:
+                    if full_filename in line:
+                        task_id = line.strip().split(",")[0]
+                        break
 
-            if task_status["state"] != "COMPLETED":
-                # Task is not completed
-                all_completed = False
-                print(f"{full_filename} - {task_status['state']}")
+                if task_id:
+                    # Check task status
+                    task_status = ee.data.getTaskStatus(task_id)[0]
 
-        # Check overall completion status
-        if all_completed:
-            # if run_type == 2:
-            # local machine run
-            # Download DATA
-            # breakpoint()  # TODO add local processor
-            # download_and_delete_file(filename)
-            # else:
-            print(filename+" is ready to process")
+                if task_status["state"] != "COMPLETED":
+                    # Task is not completed
+                    all_completed = False
+                    print(f"{full_filename} - {task_status['state']}")
 
-            # Get the product and item
-            product, item = extract_product_and_item(
-                task_status['description'])
+            # Check overall completion status
+            if all_completed:
+                # if run_type == 2:
+                # local machine run
+                # Download DATA
+                # breakpoint()  # TODO add local processor
+                # download_and_delete_file(filename)
+                # else:
+                print(filename+" is ready to process")
 
-            # Get the metadata
-            metadata = read_file_meta(os.path.join(
-                config.PROCESSING_DIR, filename+".csv"))
+                # Get the product and item
+                product, item = extract_product_and_item(
+                    task_status['description'])
 
-            # merge files
-            file_merged = merge_files_with_gdal_warp(filename)
+                # Get the metadata
+                metadata = read_file_meta(os.path.join(
+                    config.PROCESSING_DIR, filename+".csv"))
 
-            # move file to Destination: in case reproejction is done here: move file_reprojected
-            move_files_with_rclone(
-                file_merged, os.path.join(S3_DESTINATION, product, metadata['Item']))
+                # merge files
+                file_merged = merge_files_with_gdal_warp(filename)
 
-            # clean up GDrive and local drive
-            # os.remove(file_merged)
-            clean_up_gdrive(filename)
+                # move file to Destination: in case reproejction is done here: move file_reprojected
+                move_files_with_rclone(
+                    file_merged, os.path.join(S3_DESTINATION, product, metadata['Item']))
 
-        else:
-            print(filename+" is NOT ready to process")
+                # clean up GDrive and local drive
+                # os.remove(file_merged)
+                clean_up_gdrive(filename)
 
-    # Last step
-    if run_type == 1:
-        # Remove the key file so It wont be commited
-        os.remove("keyfile.json")
-        os.remove("rclone.conf")
-    # empty temp files on GDrive
-    file_list = drive.ListFile({'q': "trashed=true"}).GetList()
-    for file in file_list:
-        file.Delete()
-        print('GDRIVE TRASH: Deleted file: %s' % file['title'])
-    print("PUBLISH Process done.")
+            else:
+                print(filename+" is NOT ready to process")
+
+        # Last step
+        if run_type == 1:
+            # Remove the key file so It wont be commited
+            os.remove("keyfile.json")
+            os.remove("rclone.conf")
+        # empty temp files on GDrive
+        file_list = drive.ListFile({'q': "trashed=true"}).GetList()
+        for file in file_list:
+            file.Delete()
+            print('GDRIVE TRASH: Deleted file: %s' % file['title'])
+        print("PUBLISH Process done.")
 
 
 if __name__ == "__main__":
-    publish()
+    publisher = Publisher()
+    publisher.run()
