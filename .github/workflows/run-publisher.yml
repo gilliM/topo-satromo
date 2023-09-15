@@ -53,14 +53,14 @@ jobs:
     - name: install gdal
       run: |
         sudo apt-get update
-        sudo apt-get install gdal-bin 
+        sudo apt-get --assume-yes install gdal-bin fuse3
 
     #- name: Create rclone config file
     #  run: echo "${{ secrets.RCLONE_CONFIG }}" > rclone.conf
     
     - name: Run Python script
       run: |
-        python main.py --config int_config publish
+        python main.py --config gmi_config publish
       env: # Set the secrets as env var
         GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
         RCONF_SECRET: ${{ secrets.RCONF_SECRET }}

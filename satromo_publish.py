@@ -45,6 +45,7 @@ class Publisher:
             gauth.credentials = ServiceAccountCredentials.from_json_keyfile_name(
                 gauth.service_account_file, scopes=scopes
             )
+            self.rclone_file = settings.rclone_secrets
 
         elif settings.run_type == RunType.INT:
             # Initialize GEE and Google Drive using GitHub secrets
@@ -63,12 +64,13 @@ class Publisher:
 
             # Write rclone config to a file
             rclone_config = os.environ.get('RCONF_SECRET')
-            with open(settings.rclone_secrets, "w") as f:
+            self.rclone_file = "rclone.conf"
+            with open(self.rclone_file, "w") as f:
                 f.write(rclone_config)
 
             # Write GDRIVE Secrest config to a file
             google_secret = os.environ.get('GOOGLE_CLIENT_SECRET')
-            google_secret_file = "keyfile.json"
+            google_secret_file = "/keyfile.json"
             with open(google_secret_file, "w") as f:
                 f.write(google_secret)
 
@@ -139,7 +141,7 @@ class Publisher:
         # Run rclone command to move files
         # See hint https://forum.rclone.org/t/s3-rclone-v-1-52-0-or-after-permission-denied/21961/2
         source = os.path.abspath(source)
-        command = ["rclone", "move", "--config", settings.rclone_secrets, "--s3-no-check-bucket",
+        command = ["rclone", "move", "--config", self.rclone_file, "--s3-no-check-bucket",
                    source, destination]
         logger.debug(' '.join(command))
         subprocess.run(command, check=True)
@@ -540,7 +542,8 @@ class Publisher:
             # Remove the key file so It wont be commited
             logger.info('removing key files')
             os.remove("keyfile.json")
-            os.remove(settings.rclone_secrets)
+            os.remove("/keyfile.json")
+            os.remove(self.rclone_file)
 
         # empty temp files on GDrive
         file_list = self.drive.ListFile({'q': "trashed=true"}).GetList()
