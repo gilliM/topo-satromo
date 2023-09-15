@@ -171,17 +171,13 @@ class BaseProcessor:
 
         # Check if the file already exists
         file_exists = os.path.isfile(settings.gee_running_tasks)
-
         with open(settings.gee_running_tasks, "a", newline="") as f:
             writer = csv.writer(f)
-
             # Write the header if the file is newly created
             if not file_exists:
                 writer.writerow(header)
-
             # Write the data
             writer.writerow(data)
-
 
     def check_product_update(self, product_name, date_string):
         """

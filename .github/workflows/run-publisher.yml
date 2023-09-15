@@ -60,7 +60,7 @@ jobs:
     
     - name: Run Python script
       run: |
-        python satromo_publish.py
+        python main.py --config int_config publish
       env: # Set the secrets as env var
         GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
         RCONF_SECRET: ${{ secrets.RCONF_SECRET }}

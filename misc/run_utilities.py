@@ -6,7 +6,7 @@ import platform
 from enum import Enum
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
-main_directory = os.path.join(current_directory, '..')
+main_directory = os.path.abspath(os.path.join(current_directory, '..'))
 
 def set_config():
     config_file = settings.config_file + '.yaml'
@@ -24,10 +24,15 @@ def set_config():
         settings.configure(gdrive_secrets="personal")
     else:
         settings.configure(gdrive_secrets=os.path.join(main_directory, 'secrets', settings.config['GDRIVE_SECRETS']))
-
+    settings.configure(rclone_secrets=os.path.join(main_directory, 'secrets', settings.config['RCLONE_SECRETS']))
     # Get the operating system name
     os_name = platform.system()
     settings.configure(os_name=os_name)
+    settings.configure(gdrive_source=settings.config['GDRIVE_SOURCE'])
+    settings.configure(gdrive_mount=settings.config['GDRIVE_MOUNT'])
+    settings.configure(s3_destination=settings.config['S3_DESTINATION'])
+
+    settings.configure(buffer_file=os.path.join(main_directory, *data['BUFFER']))
 
 
 class RunType(Enum):

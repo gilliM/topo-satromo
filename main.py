@@ -13,6 +13,10 @@ from satromo_publish import Publisher
 def cli(debug, config_file):
     if debug:
         settings.configure(log_level='DEBUG')
+
+        # Set the CPL_DEBUG environment variable to enable verbose output fro GDAL
+        os.environ["CPL_DEBUG"] = "ON"
+
     if config_file is not None:
         settings.configure(config_file=config_file)
     logger.debug(f"Debug mode is {'on' if debug else 'off'}")
@@ -20,6 +24,7 @@ def cli(debug, config_file):
 
     from misc.run_utilities import set_config
     set_config()
+
 
 @cli.command()
 @click.option('-f', '--force-processing', is_flag=True)

@@ -3,7 +3,7 @@ GITHUB_OWNER: GilliM
 GITHUB_REPO: topo-satromo
 
 # Google Drive secrets
-GDRIVE_SECRETS: personal
+GDRIVE_SECRETS: geetest-credentials.secret  # personal
 RCLONE_SECRETS: rclone.conf
 
 # File and directory paths
@@ -13,16 +13,11 @@ PROCESSING_DIR: processing
 LAST_PRODUCT_UPDATES: [tools, last_updates.csv]
 
 # DEV
-GDRIVE_SOURCE_DEV: "geedrivetest:"
+GDRIVE_SOURCE: "satromo_exolabs:"
 # under Windows, add \\ to escape the backslash like r'Y:\\'
-GDRIVE_MOUNT_DEV: r'Y:\\'
+GDRIVE_MOUNT: "/mnt/localgdrive"
 # under Windows, add \\ to escape the backslash like r'X:\\'
-S3_DESTINATION_DEV: r'X:\\'
-# INT
-GDRIVE_SOURCE_INT: "geedriveINT:"
-GDRIVE_MOUNT_INT: "localgdrive"
-S3_DESTINATION_INT: ["s3INT:satromoint", "data"]
-
+S3_DESTINATION: 'exolabs_s3:/satromo'
 
 # Development environment parameters
 RESULTS: results  # Local path for results
