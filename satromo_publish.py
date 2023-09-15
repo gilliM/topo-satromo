@@ -70,7 +70,8 @@ class Publisher:
 
             # Write GDRIVE Secrest config to a file
             google_secret = os.environ.get('GOOGLE_CLIENT_SECRET')
-            google_secret_file = "/keyfile.json"
+            google_secret_file = "keyfile.json"
+            logger.info(os.path.abspath(google_secret_file))
             with open(google_secret_file, "w") as f:
                 f.write(google_secret)
 
@@ -542,7 +543,6 @@ class Publisher:
             # Remove the key file so It wont be commited
             logger.info('removing key files')
             os.remove("keyfile.json")
-            os.remove("/keyfile.json")
             os.remove(self.rclone_file)
 
         # empty temp files on GDrive
