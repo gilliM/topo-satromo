@@ -27,17 +27,19 @@ def cli(debug, config_file):
 
 
 @cli.command()
-@click.option('-f', '--force-processing', is_flag=True)
-def process(force_processing):
+@click.option('-f', '--force', is_flag=True)
+def process(force):
     logger.info('start processing')
-    settings.configure(force_processing=force_processing)
+    settings.configure(force_processing=force)
     p = Processor()
     p.run()
 
 
 @cli.command()
-def publish():
+@click.option('--skip_s3', is_flag=True, help='dev option to skip the step to copy files S3')
+def publish(skip_s3):
     logger.info('start publishing')
+    settings.configure(skip_s3=skip_s3)
     p = Publisher()
     p.run()
 

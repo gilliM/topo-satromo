@@ -132,6 +132,10 @@ class Publisher:
         Returns:
         None
         """
+        if settings.skip_s3:
+            logger.warning("Skipping 'copy to s3' step")
+            return
+
         # Run rclone command to move files
         # See hint https://forum.rclone.org/t/s3-rclone-v-1-52-0-or-after-permission-denied/21961/2
         source = os.path.abspath(source)
@@ -499,7 +503,7 @@ class Publisher:
                 if task_status["state"] != "COMPLETED":
                     # Task is not completed
                     all_completed = False
-                    print(f"{full_filename} - {task_status['state']}")
+                    logger.warning(f"{full_filename} - {task_status['state']}")
 
             # Check overall completion status
             if all_completed:
